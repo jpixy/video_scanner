@@ -1,15 +1,14 @@
-#ifndef JSON_HELPER_H
-#define JSON_HELPER_H
+#ifndef VIDEO_SCANNER_JSON_HELPER_H
+#define VIDEO_SCANNER_JSON_HELPER_H
 
+#include "video_scanner/video_types.h"
 #include <nlohmann/json.hpp>
-#include <string>
-#include <vector>
 
 namespace video_scanner {
 
-void SaveToJson(const std::vector<std::string> &files,
-                const std::string &outputPath);
+void SaveToJson(const std::vector<VideoFileInfo>& videos, 
+               const std::string& output_path);
 
 } // namespace video_scanner
 
-#endif // JSON_HELPER_H
+#endif // VIDEO_SCANNER_JSON_HELPER_H
