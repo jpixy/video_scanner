@@ -1,1 +1,0 @@
-/bin/g++ CMakeFiles/test_file_scanner.dir/test_file_scanner.cpp.o -o test_file_scanner  -lpthread
