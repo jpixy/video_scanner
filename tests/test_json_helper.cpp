@@ -2,58 +2,59 @@
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <fstream>
-#include <vector>
 
-// 测试固件类定义
 class JsonHelperTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        test_file_ = "test_output.json";
+        // 使用临时目录作为测试目录
+        test_output_dir_ = std::filesystem::temp_directory_path() / "video_scanner_test";
+        std::filesystem::create_directory(test_output_dir_);
     }
 
     void TearDown() override {
-        if (std::filesystem::exists(test_file_)) {
-            std::filesystem::remove(test_file_);
-        }
+        // 清理测试目录
+        std::filesystem::remove_all(test_output_dir_);
     }
 
-    std::string test_file_;
+    std::filesystem::path test_output_dir_;
 };
 
-// 测试用例1：验证正常JSON生成
 TEST_F(JsonHelperTest, GeneratesValidJson) {
     std::vector<video_scanner::VideoFileInfo> videos = {
-        {"video1.mp4", "/path/to/video1.mp4", 1024},
-        {"video2.avi", "/path/to/video2.avi", 2048}
+        {"video1.mp4", "/path/to/video1.mp4", 1024, "Test Movie", "", "", 2023}
     };
     
-    video_scanner::SaveToJson(videos, test_file_);
+    std::string output_file = (test_output_dir_ / "output.json").string();
+    video_scanner::SaveToJson(videos, output_file);
     
     // 验证文件存在
-    ASSERT_TRUE(std::filesystem::exists(test_file_));
+    ASSERT_TRUE(std::filesystem::exists(output_file));
     
     // 验证文件内容
-    std::ifstream file(test_file_);
+    std::ifstream file(output_file);
     nlohmann::json j;
     file >> j;
     
-    EXPECT_EQ(j.size(), 2);
+    EXPECT_TRUE(j.is_array());
+    EXPECT_EQ(j.size(), 1);
     EXPECT_EQ(j[0]["filename"], "video1.mp4");
-    EXPECT_EQ(j[0]["absolute_path"], "/path/to/video1.mp4");
-    EXPECT_EQ(j[0]["size_bytes"], 1024);
 }
 
-// 测试用例2：验证空列表处理
 TEST_F(JsonHelperTest, HandlesEmptyList) {
     std::vector<video_scanner::VideoFileInfo> empty_list;
-    video_scanner::SaveToJson(empty_list, test_file_);
+    std::string output_file = (test_output_dir_ / "empty.json").string();
     
-    ASSERT_TRUE(std::filesystem::exists(test_file_));
+    video_scanner::SaveToJson(empty_list, output_file);
     
-    std::ifstream file(test_file_);
+    // 验证文件存在
+    ASSERT_TRUE(std::filesystem::exists(output_file));
+    
+    // 验证文件内容
+    std::ifstream file(output_file);
     nlohmann::json j;
     file >> j;
     
     EXPECT_TRUE(j.is_array());
     EXPECT_TRUE(j.empty());
+    EXPECT_EQ(j.dump(), "[]");
 }

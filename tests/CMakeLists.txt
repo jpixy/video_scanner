@@ -28,6 +28,7 @@ add_executable(test_video_scanner
     test_video_scanner.cpp
     ${SRC_DIR}/video_scanner.cpp
     ${SRC_DIR}/file_scanner.cpp
+    ${SRC_DIR}/filename_parser.cpp
 )
 
 add_executable(test_json_helper

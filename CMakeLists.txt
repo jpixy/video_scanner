@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(include)
 
 # 添加源文件
-add_executable(video_scanner src/main.cpp src/file_scanner.cpp src/video_scanner.cpp src/json_helper.cpp)
+add_executable(video_scanner src/main.cpp src/file_scanner.cpp src/video_scanner.cpp src/json_helper.cpp src/filename_parser.cpp)
 
 # 添加单元测试目标
 enable_testing()
