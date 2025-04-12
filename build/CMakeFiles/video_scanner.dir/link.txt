@@ -1,0 +1,1 @@
+/bin/g++ CMakeFiles/video_scanner.dir/src/main.cpp.o CMakeFiles/video_scanner.dir/src/file_scanner.cpp.o CMakeFiles/video_scanner.dir/src/video_scanner.cpp.o CMakeFiles/video_scanner.dir/src/json_helper.cpp.o -o video_scanner

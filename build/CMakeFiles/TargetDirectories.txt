@@ -1,0 +1,10 @@
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/CMakeFiles/video_scanner.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/CMakeFiles/test.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/CMakeFiles/edit_cache.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/CMakeFiles/rebuild_cache.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/tests/CMakeFiles/test_file_scanner.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/tests/CMakeFiles/test_video_scanner.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/tests/CMakeFiles/test_json_helper.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/tests/CMakeFiles/test.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/tests/CMakeFiles/edit_cache.dir
+/home/johnny/Development/source_code/workspace/cpp/video_scanner/build/tests/CMakeFiles/rebuild_cache.dir
