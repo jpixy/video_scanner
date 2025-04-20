@@ -1,6 +1,5 @@
 #include "video_scanner/filename_parser.h"
 #include <algorithm>
-#include <vector>
 #include <regex>
 #include <cctype>
 
@@ -12,23 +11,43 @@ void FilenameParser::Parse(VideoFileInfo& file_info) {
     file_info.video_name_en.clear();
     file_info.video_name_other.clear();
 
-    // 1. 首先提取年份
-    ExtractYear(file_info.filename, file_info.year);
-
-    // 2. 移除文件扩展名和质量信息
+    // 1. 去除后缀名
     std::string base_name = RemoveQualityInfo(file_info.filename);
 
-    // 3. 分割文件名各部分
-    std::vector<std::string> parts = SplitFilenameParts(base_name);
+    // 2. 查找文件名中是否有年份
+    ExtractYear(base_name, file_info.year);
 
-    // 4. 分析各部分内容
-    AnalyzeParts(parts, file_info);
+    // 3. 如果有年份，以年份为分割点
+    std::vector<std::string> parts = SplitFilenameParts(base_name);
+    int year_index = -1;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        int possible_year = 0;
+        if (ExtractYear(parts[i], possible_year)) {
+            year_index = static_cast<int>(i);
+            break;
+        }
+    }
+
+    // 4. 根据是否找到年份，应用逻辑A
+    if (year_index != -1) {
+        std::vector<std::string> before_year(parts.begin(), parts.begin() + year_index);
+        std::vector<std::string> after_year(parts.begin() + year_index + 1, parts.end());
+        ApplyLogicA(before_year, file_info);
+        ApplyLogicA(after_year, file_info);
+    } else {
+        ApplyLogicA(parts, file_info);
+    }
+
+    // 清理前后空格
+    file_info.video_name_cn = CleanName(file_info.video_name_cn);
+    file_info.video_name_en = CleanName(file_info.video_name_en);
+    file_info.video_name_other = CleanName(file_info.video_name_other);
 }
 
 bool FilenameParser::ExtractYear(const std::string& filename, int& year) {
     std::regex year_regex(R"((19|20)\d{2})");
     std::smatch match;
-    
+
     if (std::regex_search(filename, match, year_regex)) {
         year = std::stoi(match.str());
         return true;
@@ -37,24 +56,8 @@ bool FilenameParser::ExtractYear(const std::string& filename, int& year) {
 }
 
 std::string FilenameParser::RemoveQualityInfo(const std::string& filename) {
-    // 移除文件扩展名
     size_t last_dot = filename.find_last_of('.');
-    std::string base_name = (last_dot != std::string::npos) ? 
-                           filename.substr(0, last_dot) : filename;
-
-    // 常见质量标记列表
-    static const std::vector<std::string> quality_marks = {
-        "DC", "HD720P", "HD1080P", "X264", "AAC", "Korean", "CHS", 
-        "Mp4Ba", "BluRay", "WEB-DL", "HDR", "REMUX"
-    };
-
-    // 移除质量标记
-    for (const auto& mark : quality_marks) {
-        std::regex mark_regex("\\." + mark + "($|\\.)", std::regex_constants::icase);
-        base_name = std::regex_replace(base_name, mark_regex, "");
-    }
-
-    return base_name;
+    return (last_dot != std::string::npos) ? filename.substr(0, last_dot) : filename;
 }
 
 std::vector<std::string> FilenameParser::SplitFilenameParts(const std::string& filename) {
@@ -71,7 +74,6 @@ std::vector<std::string> FilenameParser::SplitFilenameParts(const std::string& f
         end = filename.find('.', start);
     }
 
-    // 添加最后一部分
     std::string last_part = filename.substr(start);
     if (!last_part.empty()) {
         parts.push_back(last_part);
@@ -80,31 +82,75 @@ std::vector<std::string> FilenameParser::SplitFilenameParts(const std::string& f
     return parts;
 }
 
-void FilenameParser::AnalyzeParts(const std::vector<std::string>& parts, VideoFileInfo& info) {
-    // 1. 首先识别中文部分
-    for (const auto& part : parts) {
-        if (ContainsChinese(part)) {
-            info.video_name_cn = CleanName(part);
-            break;
-        }
-    }
+void FilenameParser::ApplyLogicA(const std::vector<std::string>& parts, VideoFileInfo& info) {
+    std::string tmp;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        const std::string& part = parts[i];
 
-    // 2. 识别英文部分
-    for (const auto& part : parts) {
-        if (IsEnglish(part) && part != info.video_name_cn) {
-            info.video_name_en = CleanName(part);
-            break;
-        }
-    }
-
-    // 3. 处理特殊情况（如"导演剪辑版"等）
-    for (const auto& part : parts) {
-        if (ContainsChinese(part) && part != info.video_name_cn) {
-            if (!info.video_name_cn.empty()) {
-                info.video_name_cn += " " + CleanName(part);
+        // 跳过元信息
+        if (IsMetaInfo(part)) {
+            if (!tmp.empty()) {
+                ApplyLogicB(tmp, info);
+                tmp.clear();
             }
+            continue;
+        }
+
+        // 拼接连续的中文、英文或其他语言单词
+        if (!tmp.empty()) tmp += " ";
+        tmp += part;
+
+        // 检查是否是最后一个部分或下一个部分是元信息
+        if (i == parts.size() - 1 || IsMetaInfo(parts[i + 1])) {
+            ApplyLogicB(tmp, info);
+            tmp.clear();
         }
     }
+}
+
+void FilenameParser::ApplyLogicB(std::string& tmp, VideoFileInfo& info) {
+    // 1. 判断 tmp 后面是否直接跟着数字
+    std::regex number_suffix_regex(R"((\s|\.|_|-)(\d+)$)");
+    std::smatch match;
+    if (std::regex_search(tmp, match, number_suffix_regex)) {
+        tmp += " " + match.str(2);
+    }
+
+    // 2. 如果 tmp 是中文，删除字母加下划线前缀
+    if (ContainsChinese(tmp)) {
+        tmp = CleanChinesePrefix(tmp);
+    }
+
+    // 3. 判断 tmp 是中文、英文还是其他语言
+    if (ContainsChinese(tmp)) {
+        info.video_name_cn = tmp;
+    } else if (IsEnglish(tmp)) {
+        info.video_name_en = tmp;
+    } else {
+        info.video_name_other = tmp;
+    }
+}
+
+bool FilenameParser::IsMetaInfo(const std::string& part) {
+    static const std::vector<std::string> meta_keywords = {
+        "DC", "HD720P", "HD1080P", "X264", "AAC", "Korean", "CHS", "CHT",
+        "BluRay", "WEB-DL", "HDR", "REMUX", "DTS", "AC3", "H265", "HEVC",
+        "AAC5.1", "DDP5.1", "Atmos", "SDR", "DV", "HDR10", "HDR10+", "IMAX",
+        "4K", "60帧", "KORSUB", "WEBRip", "H264", "H265", "2Audio",
+        "国语中字", "中简繁英字幕"
+    };
+
+    for (const auto& kw : meta_keywords) {
+        if (part.find(kw) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string FilenameParser::CleanChinesePrefix(const std::string& name) {
+    std::regex prefix_regex(R"(^[A-Za-z_]+)");
+    return std::regex_replace(name, prefix_regex, "");
 }
 
 bool FilenameParser::ContainsChinese(const std::string& str) {
@@ -115,22 +161,16 @@ bool FilenameParser::ContainsChinese(const std::string& str) {
 
 bool FilenameParser::IsEnglish(const std::string& str) {
     return std::all_of(str.begin(), str.end(), [](char c) {
-        return isalpha(c) || isspace(c) || c == '-';
+        return isalpha(c) || isspace(c) || c == '-' || c == '\'';
     });
 }
 
 std::string FilenameParser::CleanName(std::string name) {
-    // 替换分隔符
     std::replace(name.begin(), name.end(), '_', ' ');
-    
-    // 移除多余空格
     std::regex space_regex("\\s+");
     name = std::regex_replace(name, space_regex, " ");
-    
-    // 去除首尾空格
     name.erase(0, name.find_first_not_of(" "));
     name.erase(name.find_last_not_of(" ") + 1);
-    
     return name;
 }
 

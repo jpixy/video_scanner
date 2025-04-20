@@ -16,9 +16,13 @@ private:
     static std::string RemoveQualityInfo(const std::string& filename);
     static std::vector<std::string> SplitFilenameParts(const std::string& filename);
     static void AnalyzeParts(const std::vector<std::string>& parts, VideoFileInfo& info);
+    static void ApplyLogicA(const std::vector<std::string>& parts, VideoFileInfo& info);
+    static void ApplyLogicB(std::string& tmp, VideoFileInfo& info);
+    static bool IsMetaInfo(const std::string& part);
     static bool ContainsChinese(const std::string& str);
     static bool IsEnglish(const std::string& str);
     static std::string CleanName(std::string name);
+    static std::string CleanChinesePrefix(const std::string& name);
 };
 
 } // namespace video_scanner

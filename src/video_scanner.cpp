@@ -27,6 +27,11 @@ std::vector<VideoFileInfo> VideoScanner::Scan() {
 
         // 检查文件扩展名是否在支持的列表中
         if (std::find(supportedExtensions.begin(), supportedExtensions.end(), extension) != supportedExtensions.end()) {
+            // 检查文件名是否包含 "sample"
+            if (file.find("sample") != std::string::npos || file.find("SAMPLE") != std::string::npos) {
+                continue; // 跳过包含 "sample" 的文件
+            }
+
             VideoFileInfo info;
             info.filename = std::filesystem::path(file).filename().string();
             info.absolute_path = std::filesystem::absolute(file).string();
