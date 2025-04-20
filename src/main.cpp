@@ -15,7 +15,7 @@ void PrintUsage(const char* program_name) {
 
 int main(int argc, char* argv[]) {
     // 初始化日志系统
-    video_scanner::Logger::init();
+    video_scanner::Logger::init("logs/video_scanner.log", spdlog::level::debug);
     LOG_INFO("Starting video scanner application");
 
     if (argc < 2 || argc > 3) {

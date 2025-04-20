@@ -1,4 +1,5 @@
 #include "video_scanner/filename_parser.h"
+#include "video_scanner/logger.h"
 #include <algorithm>
 #include <regex>
 #include <cctype>
@@ -6,6 +7,9 @@
 namespace video_scanner {
 
 void FilenameParser::Parse(VideoFileInfo& file_info) {
+    video_scanner::Logger::init();
+    LOG_INFO("Starting to parse filename: {}", file_info.filename);
+    
     file_info.year = 0;
     file_info.video_name_cn.clear();
     file_info.video_name_en.clear();
