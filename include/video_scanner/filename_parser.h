@@ -2,27 +2,29 @@
 #define FILENAME_PARSER_H
 
 #include "video_scanner/video_types.h"
+#include <gtest/gtest_prod.h>
 #include <string>
 #include <vector>
 
 namespace video_scanner {
 
+// 定义枚举类型，表示语言类型
+enum class LanguageType {
+  CN,   // 中文
+  EN,   // 英文
+  OTHER // 其他语言
+};
+
 class FilenameParser {
 public:
-    static void Parse(VideoFileInfo& info);
+  static void Parse(VideoFileInfo &info);
 
-private:
-    static bool ExtractYear(const std::string& filename, int& year);
-    static std::string RemoveQualityInfo(const std::string& filename);
-    static std::vector<std::string> SplitFilenameParts(const std::string& filename);
-    static void AnalyzeParts(const std::vector<std::string>& parts, VideoFileInfo& info);
-    static void ApplyLogicA(const std::vector<std::string>& parts, VideoFileInfo& info);
-    static void ApplyLogicB(std::string& tmp, VideoFileInfo& info);
-    static bool IsMetaInfo(const std::string& part);
-    static bool ContainsChinese(const std::string& str);
-    static bool IsEnglish(const std::string& str);
-    static std::string CleanName(std::string name);
-    static std::string CleanChinesePrefix(const std::string& name);
+  /*private:*/
+  static bool IsMetaInfo(const std::string &str,
+                         const std::vector<std::string> &metaArray);
+  static std::vector<std::string>
+  FindVideoNames(const std::vector<std::string> &strArray,
+                 const std::vector<std::string> &metaArray, LanguageType type);
 };
 
 } // namespace video_scanner

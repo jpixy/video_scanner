@@ -17,12 +17,13 @@ include_directories(include)
 
 # 添加源文件
 add_executable(video_scanner 
-	src/main.cpp 
+	src/main.cpp
 	src/logger.cpp
-	src/file_scanner.cpp 
+	src/file_scanner.cpp
 	src/video_scanner.cpp
-	src/json_helper.cpp 
+	src/json_helper.cpp
 	src/filename_parser.cpp
+  src/utils/string_utils.cpp
 )
 
 # 链接库
